@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  This is a Basic Application <br>
+  
+</head>
+
+<body>
+  Based on the Implementation in https://github.com/ucla-hci/m119/tree/main/m3.
+  <br>
+  And based on the dynamic Graphing in https://canvasjs.com/javascript-charts/dynamic-live-line-chart/
+</body>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script type="application/javascript">
+  window.onload = function() {
+  
+  // Initial Values
+  var dataPoints = [];
+  var xValue = 0;
+  var yValue = 0;
+  var newDataCount = 20;
+  var chart = new CanvasJS.Chart("chartContainer", {
+      theme: "light2",
+      title: {
+	  text: "Accelerometer X Axis Live Data Feed"
+      },
+      data: [{
+	  type: "line",
+	  dataPoints: dataPoints
+      }]
+  });
+      
+  const SERVERADDRESS = "http://127.0.0.1:3000"
+  // use XML HTTP request to grab data from the server (central)
+  let xmlhttp = new XMLHttpRequest()
+  xmlhttp.onreadystatechange = function () {
+      if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+	  let responseText = xmlhttp.responseText
+	  let sensorValue = parseFloat(JSON.parse(responseText).sensorValue)
+	  dataPoints.push({x: xValue, y:sensorValue});
+	  xValue = xValue + 1;
+	  chart.render();
+      }
+  }
+  // periodically grab data
+  let getData = () => {
+      xmlhttp.open("POST", SERVERADDRESS, true)
+      xmlhttp.setRequestHeader("Content-type", "application/json")
+      xmlhttp.send("")
+      chart.render()
+      let responseText = xmlhttp.responseText
+      let sensorValue = parseFloat(JSON.parse(responseText).sensorValue)
+      dataPoints.push({x: xValue, y:sensorValue});
+      xValue = xValue + 1;
+      chart.render();
+      setTimeout(() => {
+	  getData()
+      }, 10)
+  }
+  getData()
+
+  }
+</script>
+
+<body>
+  <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+  <script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</body>
+
+</html>
+
